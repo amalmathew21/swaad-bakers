@@ -22,7 +22,7 @@
    <string>SWAAD BAKERS</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../../../../../../../../../../Desktop/Swaad/swaad.qrc">
+   <iconset resource="swaad.qrc">
     <normaloff>:/newPrefix/logo.jpg</normaloff>:/newPrefix/logo.jpg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -53,7 +53,7 @@
      <enum>QFrame::Raised</enum>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>4</number>
     </property>
     <widget class="QWidget" name="page">
      <widget class="QFrame" name="frame">
@@ -3167,7 +3167,7 @@ image: url(:/newPrefix/add.png);</string>
   </widget>
  </widget>
  <resources>
-  <include location="../../../../../../../../../../Desktop/Swaad/swaad.qrc"/>
+  <include location="swaad.qrc"/>
  </resources>
  <connections/>
 </ui>

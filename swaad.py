@@ -1416,8 +1416,8 @@ class Ui_Swaad(object):
         self.pushButton_userlogout.setText(_translate("Swaad", "LOGOUT"))
         self.lineEdit_user.setText(_translate("Swaad", "USER"))
         self.label_3.setText(_translate("Swaad", "SALES REPORT"))
-        self.label_4.setText(_translate("Swaad", "TO"))
-        self.label_5.setText(_translate("Swaad", "FROM"))
+        self.label_4.setText(_translate("Swaad", "FROM"))
+        self.label_5.setText(_translate("Swaad", "TO"))
         self.pushButton_profit_report.setText(_translate("Swaad", "Profit Report"))
         self.pushButton_sales_report.setText(_translate("Swaad", "Sales Report"))
         self.lineEdit_salesreport.setText(_translate("Swaad", "USER"))
@@ -1545,6 +1545,7 @@ class Ui_Swaad(object):
         self.pushButton_delete.clicked.connect(self.delup)
         self.pushButton_pro_clear.clicked.connect(self.clearpr)
         self.pushButton_cat_add.clicked.connect(self.addcat)
+        self.pushButton_cat_update.clicked.connect(self.updatecat)
         self.pushButton_cat_delete.clicked.connect(self.delcat)
         self.pushButton_prod_add.clicked.connect(self.addpr)
         self.pushButton_pro_delete.clicked.connect(self.delpr)
@@ -1733,11 +1734,11 @@ class Ui_Swaad(object):
             cursor = conn.cursor()
             sql = ("SELECT * FROM DATA")
             result = cursor.execute(sql)
-            self.tableWidget_purchase.setRowCount(0)
+            self.tableWidget_sales.setRowCount(0)
             for row_number, row_data in enumerate(result):
-                self.tableWidget_purchase.insertRow(row_number)
+                self.tableWidget_sales.insertRow(row_number)
                 for column_number, data in enumerate(row_data):
-                    self.tableWidget_purchase.setItem(row_number, column_number,
+                    self.tableWidget_sales.setItem(row_number, column_number,
                                                    QtWidgets.QTableWidgetItem(str(data)))
             conn.commit()
             conn.close()
@@ -1937,11 +1938,39 @@ class Ui_Swaad(object):
         except Exception as error:
             print(error)
 
+
+    def updatecat(self):
+        catid = self.lineEdit_catid.text()
+        catname = self.lineEdit_catname.text()
+        try:
+            if catid and catname != "":
+                conn = sqlite3.connect('SWAAD.db')
+                cursor = conn.cursor()
+                sql = ('UPDATE CATEGORY SET CAT_NAME = ? WHERE CAT_ID = ?')
+                cursor.execute(sql, (catname, catid))
+                conn.commit()
+                conn.close()
+                self.lineEdit_catid.setText("")
+                self.lineEdit_catname.setText("")
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Information)
+                msg.setWindowTitle("SWAAD BAKERS")
+                msg.setText("CATEGORY NAME UPDATED SUCCESSFULLY")
+                msg.exec_()
+            else:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setWindowTitle("SWAAD BAKERS")
+                msg.setText("CATEGORY NAME AND CATEGOY ID FOR UPDATION !")
+                msg.exec_()
+        except Exception as error:
+            print(error)
+
     def delcat(self):
         cid = self.lineEdit_catid.text()
         cname = self.lineEdit_catname.text()
         try:
-            if cname == '':
+            if len(cname) > 0:
                 conn = sqlite3.connect('SWAAD.db')
                 cursor = conn.cursor()
                 sql = ('''DELETE FROM CATEGORY WHERE CAT_ID = ?''')
@@ -1955,7 +1984,7 @@ class Ui_Swaad(object):
                 msg.setText("SUCCESSFULLY DELETED")
                 msg.setWindowTitle("SWAAD BAKERS")
                 msg.exec_()
-            elif cid == '':
+            elif len(cid) > 0:
                 conn = sqlite3.connect('SWAAD.db')
                 cursor = conn.cursor()
                 sql = ('''DELETE FROM CATEGORY WHERE CAT_NAME = ?''')
@@ -2021,26 +2050,34 @@ class Ui_Swaad(object):
 
     def updatepr(self):
         pid = self.lineEdit_productid.text()
+        pname = self.lineEdit_productname.text()
+        pdesc = self.lineEdit_productdesc.text()
         price = self.lineEdit_productprice.text()
         qty = self.lineEdit_productqty.text()
         try:
-            if pid and price and qty != "":
+            if pid and pname and pdesc and price and qty != "":
                 conn = sqlite3.connect('SWAAD.db')
                 cursor = conn.cursor()
-                sql = ('UPDATE PRODUCTS SET PRICE = ?, QUANTITY = QUANTITY + ? WHERE PRODUCT_ID = ?')
-                cursor.execute(sql, (price, int(qty), pid))
+                sql = ('UPDATE PRODUCTS SET PRODUCT_NAME = ?, DESCRIPTION = ?, PRICE = ?, QUANTITY = QUANTITY + ? WHERE PRODUCT_ID = ?')
+                cursor.execute(sql, (pname,pdesc,price, int(qty), pid))
                 conn.commit()
                 conn.close()
+                self.lineEdit_productid.setText("")
+                self.lineEdit_productname.setText("")
+                self.lineEdit_productdesc.setText("")
+                self.lineEdit_productprice.setText("")
+                self.lineEdit_productweight.setText("")
+                self.lineEdit_productqty.setText("")
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Information)
                 msg.setWindowTitle("SWAAD BAKERS")
-                msg.setText("PRICE AND QUANTITY UPDATED")
+                msg.setText("PRODUCT NAME ,DESCRIPTION , PRICE AND QUANTITY UPDATED")
                 msg.exec_()
             else:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)
                 msg.setWindowTitle("SWAAD BAKERS")
-                msg.setText("ENTER PRICE QUANTITY AND PRODUCT ID FOR UPDATION !")
+                msg.setText("ENTER NAME , DESCRIPTION, PRICE QUANTITY AND PRODUCT ID FOR UPDATION !")
                 msg.exec_()
         except Exception as error:
             print(error)
@@ -2263,13 +2300,11 @@ class Ui_Swaad(object):
         sd = self.dateEdit_2.text()
         fds = fd.replace("-", " ")
         sds = sd.replace("-", " ")
-        # fdss = datetime.strptime(fds, '%d %b %Y')
-        # sdss = datetime.strptime(sds, '%d %b %Y')
         fdss = datetime.strptime(fds, '%d %m %Y')
         sdss = datetime.strptime(sds, '%d %m %Y')
         try:
             if fdss <= sdss:
-                c = canvas.Canvas("SWAADBAKERS-REPORTS-PROFIT.pdf", pagesize=(200, 250), bottomup=0)
+                c = canvas.Canvas("PROFIT-REPORTS.pdf", pagesize=(200, 250), bottomup=0)
                 c.translate(10, 40)
                 c.scale(1, -1)
                 c.drawImage("logo.jpg", 0, 0, width=50, height=30)
@@ -2279,7 +2314,7 @@ class Ui_Swaad(object):
                 c.drawCentredString(125, 20, "SWAAD BAKERS")
                 c.line(70, 22, 180, 22)
                 c.setFont("Helvetica-Bold", 5)
-                c.drawCentredString(125, 30, "SWAAD PROFIT REPORTS")
+                c.drawCentredString(125, 30, "SWAAD BAKERS PROFIT REPORTS")
                 c.line(5, 45, 195, 45)
                 c.setFont("Courier-Bold", 8)
                 c.setFont("Times-Bold", 5)
@@ -2294,8 +2329,8 @@ class Ui_Swaad(object):
                 c.line(15, 92, 185, 92)
                 c.line(15, 230, 185, 230)
                 c.line(100, 230, 100, 238)
-                p.drawRightString(180, 235, "Authorised Signatory")
-                p.drawImage("seal.png", 143, 202, width=30, height=30)
+                c.drawRightString(180, 235, "Authorised Signatory")
+                c.drawImage("seal.png", 143, 202, width=30, height=30)
                 conn = sqlite3.connect('SWAAD.db')
                 cursor = conn.cursor()
                 sql = ('''SELECT DATE,TOTAL,PROFIT FROM SALES''')
@@ -2330,14 +2365,14 @@ class Ui_Swaad(object):
                 z = sum(l)
                 # z=z//len(l)
                 c.drawString(20, 236, "TOTAL")
-                c.drawString(45, 236, "TOTAL PROFIT")
-                c.drawString(20, 241, str(k))
-                c.drawString(50, 241, str(z))
+                c.drawString(50, 236, "TOTAL PROFIT")
+                c.drawString(20, 242, str(k))
+                c.drawString(50, 243, str(z))
                 conn.commit()
                 conn.close()
                 c.showPage()
                 c.save()
-                webbrowser.open("SWAADBAKERS-REPORTS-PROFIT.pdf")
+                webbrowser.open("PROFIT-REPORTS.pdf")
             else:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)
@@ -2356,7 +2391,7 @@ class Ui_Swaad(object):
         sdss = datetime.strptime(sds, '%d %m %Y')
         try:
             if fdss <= sdss:
-                c = canvas.Canvas("SWAAD BAKERS-REPORTS.pdf", pagesize=(200, 250), bottomup=0)
+                c = canvas.Canvas("SALES-REPORTS.pdf", pagesize=(200, 250), bottomup=0)
                 c.translate(10, 40)
                 c.scale(1, -1)
                 c.drawImage("logo.jpg", 0, 0, width=50, height=30)
@@ -2380,8 +2415,9 @@ class Ui_Swaad(object):
                 c.line(15, 92, 185, 92)
                 c.line(15, 230, 185, 230)
                 c.line(100, 230, 100, 238)
-                p.drawRightString(180, 235, "Authorised Signatory")
-                p.drawImage("seal.png", 143, 202, width=30, height=30)
+                c.drawRightString(180, 235, "Authorised Signatory")
+                c.drawImage("seal.png", 143, 202, width=30, height=30)
+
                 conn = sqlite3.connect('SWAAD.db')
                 cursor = conn.cursor()
                 sql = ('''SELECT DATE,TOTAL FROM SALES''')
@@ -2411,12 +2447,12 @@ class Ui_Swaad(object):
                     j.append(m)
                 k = sum(j)
                 c.drawString(20, 236, "TOTAL")
-                c.drawString(20, 241, str(k))
+                c.drawString(20, 242, str(k))
                 conn.commit()
                 conn.close()
                 c.showPage()
                 c.save()
-                webbrowser.open("SWAADBAKERS-REPORTS.pdf")
+                webbrowser.open("SALES-REPORTS.pdf")
             else:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)
